@@ -6,7 +6,7 @@ use App\Models\Person;
 use App\Models\EmployeeRegistration;
 use App\Models\EmployeeImport;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Foundation\Queue\Queueable;
+use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
