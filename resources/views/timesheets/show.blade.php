@@ -267,6 +267,7 @@
     <div class="no-print" style="margin-bottom: 20px;">
         <button onclick="window.print()" style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Imprimir</button>
         <a href="{{ route('timesheets.index') }}" style="background: #6b7280; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; margin-left: 10px;">Voltar</a>
+        <a href="{{ route('timesheets.export-registration-xls', ['registration' => $registration->id, 'start_date' => $startDate, 'end_date' => $endDate]) }}" style="background: #22c55e; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; margin-left: 10px;">Exportar XLS</a>
     </div>
 
     <div class="header">

@@ -12,6 +12,9 @@
         <a href="{{ route('employees.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition">
             <i class="fas fa-plus mr-2"></i>Nova Pessoa
         </a>
+        <a href="{{ route('reports.employees.index') }}" class="bg-purple-600 hover:bg-purple-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition ml-2">
+            <i class="fas fa-file-alt mr-2"></i>Relatório de Colaboradores
+        </a>
     </div>
 
     <!-- Filtros -->
@@ -82,6 +85,12 @@
                 </button>
                 <a href="{{ route('employees.index') }}" class="bg-gray-500 hover:bg-gray-600 text-white font-semibold px-6 py-2 rounded-lg transition">
                     <i class="fas fa-times mr-2"></i>Limpar
+                </a>
+                @php
+                    $exportUrl = route('employees.export') . (count(request()->query()) ? '?' . http_build_query(request()->query()) : '');
+                @endphp
+                <a href="{{ $exportUrl }}" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition">
+                    <i class="fas fa-file-csv mr-2"></i>Exportar CSV
                 </a>
             </div>
         </form>
