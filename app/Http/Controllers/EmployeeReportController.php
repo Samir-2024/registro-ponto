@@ -21,22 +21,8 @@ class EmployeeReportController extends Controller
 
     public function generate(Request $request)
     {
-        $query = EmployeeRegistration::with([
-            'person',
-            'establishment',
-            'department',
-            'currentWorkShiftAssignment.template',
-        ])->join('people', 'employee_registrations.person_id', '=', 'people.id');
-        // Filtro de tipo de jornada (fixa/rotativa)
-        if ($request->filled('shift_type')) {
-            $shiftType = $request->shift_type;
-            // Filtra apenas vínculos com atribuição ativa e tipo de jornada correspondente
-            $query->whereHas('currentWorkShiftAssignment', function ($q) use ($shiftType) {
-                $q->whereHas('template', function ($q2) use ($shiftType) {
-                    $q2->where('type', $shiftType);
-                });
-            });
-        }
+        $query = EmployeeRegistration::with(['person', 'establishment', 'department'])
+            ->join('people', 'employee_registrations.person_id', '=', 'people.id');
 
         // Filtros
         if ($request->filled('establishment_id')) {
@@ -48,7 +34,11 @@ class EmployeeReportController extends Controller
         }
 
         if ($request->filled('status')) {
-            $query->where('employee_registrations.status', $request->status);
+            if ($request->status === 'active') {
+                $query->where('employee_registrations.termination_date', null);
+            } elseif ($request->status === 'terminated') {
+                $query->whereNotNull('employee_registrations.termination_date');
+            }
         }
 
         if ($request->filled('search')) {

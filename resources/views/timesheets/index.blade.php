@@ -41,7 +41,7 @@
                         <i class="fas fa-building text-purple-600 text-xl"></i>
                     </div>
                     <div>
-                        <h3 class="font-bold text-gray-900">Por Secretaria / Departamento</h3>
+                        <h3 class="font-bold text-gray-900">Por Departamento</h3>
                         <p class="text-sm text-gray-600">Gerar para todos do departamento</p>
                     </div>
                 </div>

@@ -1,29 +1,26 @@
 @extends('layouts.app')
 
 @section('content')
-
 <div class="container-fluid py-4">
     <div class="row mb-4">
         <div class="col-12">
-            <div class="bg-gradient-primary-to-secondary rounded-4 shadow p-4 mb-3 d-flex align-items-center gap-3" style="background: linear-gradient(90deg, #4f8cff 0%, #6dd5ed 100%); color: #fff;">
-                <i class="fas fa-users fa-2x"></i>
-                <div>
-                    <h1 class="h3 mb-1 fw-bold mb-0">Relatório de Colaboradores</h1>
-                    <span class="fw-light">Personalize e exporte a relação de colaboradores por filtros avançados</span>
-                </div>
-            </div>
+            <h1 class="h3 mb-0">
+                <i class="fas fa-users me-2"></i>
+                Relatório: Relação de Colaboradores
+            </h1>
+            <p class="text-muted">Configure os filtros e campos para gerar o relatório personalizado</p>
         </div>
     </div>
 
     <form action="{{ route('reports.employees.generate') }}" method="POST" id="reportForm">
         @csrf
         
-        <div class="card border-0 shadow mb-4">
-            <div class="card-header bg-primary text-white rounded-top-3">
-                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros Avançados</h5>
+        <div class="card mb-4">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Filtros</h5>
             </div>
-            <div class="card-body bg-light rounded-bottom-3">
-                <div class="row g-4 align-items-end">
+            <div class="card-body">
+                <div class="row g-3">
                     <!-- Estabelecimento -->
                     <div class="col-md-4">
                         <label for="establishment_id" class="form-label">Estabelecimento</label>
@@ -56,16 +53,6 @@
                         </select>
                     </div>
 
-                    <!-- Tipo de Jornada -->
-                    <div class="col-md-4">
-                        <label for="shift_type" class="form-label">Tipo de Jornada</label>
-                        <select name="shift_type" id="shift_type" class="form-select">
-                            <option value="">Todas</option>
-                            <option value="weekly">Fixa (Semanal Fixa)</option>
-                            <option value="rotating_shift">Rotativa (Escala Rotativa)</option>
-                        </select>
-                    </div>
-
                     <!-- Busca -->
                     <div class="col-md-12">
                         <label for="search" class="form-label">Buscar por Nome, CPF ou Matrícula</label>
@@ -75,12 +62,13 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow mb-4">
-            <div class="card-header bg-success text-white rounded-top-3">
+        <div class="card mb-4">
+            <div class="card-header bg-success text-white">
                 <h5 class="mb-0"><i class="fas fa-list-check me-2"></i>Campos do Relatório</h5>
             </div>
-            <div class="card-body bg-light rounded-bottom-3">
-                <p class="text-muted mb-3">Marque os campos que deseja incluir no relatório. <span class="fw-semibold">Dica:</span> Use os botões abaixo para selecionar/desmarcar todos rapidamente.</p>
+            <div class="card-body">
+                <p class="text-muted mb-3">Selecione os campos que deseja incluir no relatório</p>
+                
                 <div class="row">
                     <div class="col-md-6">
                         <h6 class="fw-bold mb-2">Dados Pessoais</h6>
@@ -177,22 +165,22 @@
                     </div>
                 </div>
 
-                <div class="mt-3 d-flex gap-2">
-                    <button type="button" class="btn btn-outline-primary btn-sm px-3" id="selectAll">
+                <div class="mt-3">
+                    <button type="button" class="btn btn-sm btn-outline-primary" id="selectAll">
                         <i class="fas fa-check-double me-1"></i>Selecionar Todos
                     </button>
-                    <button type="button" class="btn btn-outline-secondary btn-sm px-3" id="deselectAll">
+                    <button type="button" class="btn btn-sm btn-outline-secondary" id="deselectAll">
                         <i class="fas fa-times me-1"></i>Desmarcar Todos
                     </button>
                 </div>
             </div>
         </div>
 
-        <div class="card border-0 shadow mb-4">
-            <div class="card-header bg-info text-white rounded-top-3">
+        <div class="card mb-4">
+            <div class="card-header bg-info text-white">
                 <h5 class="mb-0"><i class="fas fa-sort me-2"></i>Ordenação</h5>
             </div>
-            <div class="card-body bg-light rounded-bottom-3">
+            <div class="card-body">
                 <div class="row g-3">
                     <div class="col-md-6">
                         <label for="sort_by" class="form-label">Ordenar por</label>
@@ -214,16 +202,16 @@
             </div>
         </div>
 
-        <div class="card border-0 shadow">
-            <div class="card-body bg-white rounded-3">
-                <div class="d-flex flex-wrap gap-2 justify-content-end">
-                    <button type="submit" name="format" value="online" class="btn btn-lg btn-primary px-4">
+        <div class="card">
+            <div class="card-body">
+                <div class="d-flex gap-2 justify-content-end">
+                    <button type="submit" name="format" value="online" class="btn btn-primary">
                         <i class="fas fa-eye me-2"></i>Visualizar Online
                     </button>
-                    <button type="submit" name="format" value="csv" class="btn btn-lg btn-success px-4">
+                    <button type="submit" name="format" value="csv" class="btn btn-success">
                         <i class="fas fa-file-csv me-2"></i>Exportar CSV
                     </button>
-                    <a href="{{ route('dashboard') }}" class="btn btn-lg btn-outline-secondary px-4">
+                    <a href="{{ route('dashboard') }}" class="btn btn-secondary">
                         <i class="fas fa-times me-2"></i>Cancelar
                     </a>
                 </div>
@@ -237,6 +225,7 @@
 document.getElementById('selectAll').addEventListener('click', function() {
     document.querySelectorAll('input[name="fields[]"]').forEach(cb => cb.checked = true);
 });
+
 document.getElementById('deselectAll').addEventListener('click', function() {
     document.querySelectorAll('input[name="fields[]"]').forEach(cb => cb.checked = false);
 });

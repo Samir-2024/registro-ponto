@@ -8,7 +8,6 @@ use App\Models\Establishment;
 use App\Models\Department;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Response;
 
 class EmployeeController extends Controller
 {
@@ -213,107 +212,5 @@ class EmployeeController extends Controller
 
         return redirect()->route('employees.index')
             ->with('success', 'Pessoa excluída com sucesso!' . ($registrationsCount > 0 ? " ({$registrationsCount} vínculo(s) também removido(s))" : ''));
-    }
-
-    /**
-     * Exporta os cadastros (com filtros ativos) em CSV
-     */
-    public function export(Request $request)
-    {
-        $query = Person::with(['activeRegistrations' => function ($q) {
-            $q->with(['establishment', 'department', 'currentWorkShiftAssignment.template'])
-                ->orderBy('created_at', 'desc');
-        }]);
-
-        if ($request->filled('search')) {
-            $search = $request->search;
-            $cleanSearch = preg_replace('/[^0-9]/', '', $search);
-            $query->where(function ($q) use ($search, $cleanSearch) {
-                $q->where('full_name', 'ILIKE', "%{$search}%");
-                if (strlen($cleanSearch) >= 11) {
-                    $q->orWhere('cpf', $cleanSearch);
-                }
-            });
-        }
-
-        if ($request->filled('establishment_id')) {
-            $query->whereHas('activeRegistrations', function ($q) use ($request) {
-                $q->where('establishment_id', $request->establishment_id);
-            });
-        }
-
-        if ($request->filled('department_id')) {
-            $query->whereHas('activeRegistrations', function ($q) use ($request) {
-                $q->where('department_id', $request->department_id);
-            });
-        }
-
-        if ($request->filled('without_registrations') && $request->without_registrations == '1') {
-            $query->doesntHave('activeRegistrations');
-        }
-
-        if ($request->filled('without_workshift') && $request->without_workshift == '1') {
-            $query->whereHas('activeRegistrations', function ($q) {
-                $q->doesntHave('currentWorkShiftAssignment');
-            });
-        }
-
-        $people = $query->orderBy('full_name')->get();
-
-        $filename = 'cadastros_colaboradores_' . date('Y-m-d_His') . '.csv';
-
-        $headers = [
-            'Content-Type' => 'text/csv; charset=UTF-8',
-            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
-            'Pragma' => 'no-cache',
-            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
-            'Expires' => '0',
-        ];
-
-        $callback = function () use ($people) {
-            $file = fopen('php://output', 'w');
-
-            // BOM UTF-8 para compatibilidade com Excel
-            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
-
-            fputcsv($file, [
-                'Nome', 'CPF', 'PIS/PASEP', 'CTPS',
-                'Matrícula', 'Cargo', 'Estabelecimento', 'Departamento',
-                'Data de Admissão', 'Status', 'Jornada',
-            ], ';');
-
-            foreach ($people as $person) {
-                if ($person->activeRegistrations->isEmpty()) {
-                    fputcsv($file, [
-                        $person->full_name,
-                        $person->cpf_formatted ?? $person->cpf ?? '-',
-                        $person->pis_pasep_formatted ?? $person->pis_pasep ?? '-',
-                        $person->ctps ?? '-',
-                        '-', '-', '-', '-', '-', 'Sem vínculo', '-',
-                    ], ';');
-                } else {
-                    foreach ($person->activeRegistrations as $reg) {
-                        $assignment = $reg->currentWorkShiftAssignment;
-                        fputcsv($file, [
-                            $person->full_name,
-                            $person->cpf_formatted ?? $person->cpf ?? '-',
-                            $person->pis_pasep_formatted ?? $person->pis_pasep ?? '-',
-                            $person->ctps ?? '-',
-                            $reg->matricula ?? '-',
-                            $reg->position ?? '-',
-                            $reg->establishment->corporate_name ?? '-',
-                            $reg->department->name ?? '-',
-                            $reg->admission_date ? $reg->admission_date->format('d/m/Y') : '-',
-                            'Ativo',
-                            $assignment ? $assignment->template->name : '-',
-                        ], ';');
-                    }
-                }
-            }
-
-            fclose($file);
-        };
-
-        return Response::stream($callback, 200, $headers);
     }
 }

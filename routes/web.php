@@ -19,7 +19,7 @@ use App\Http\Controllers\Api\FilterController;
 // Rotas de autenticação
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLoginForm'])->name('login');
-    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:3,1');
+    Route::post('/login', [AuthController::class, 'login']);
 });
 
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
@@ -41,7 +41,6 @@ Route::middleware('auth')->group(function () {
 Route::resource('departments', DepartmentController::class);
 
 // Colaboradores (Pessoas)
-Route::get('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
 Route::resource('employees', EmployeeController::class);
 
 // Vínculos de Colaboradores (EmployeeRegistrations)
@@ -137,10 +136,6 @@ Route::prefix('timesheets')->group(function () {
     Route::post('/generate', [TimesheetController::class, 'generate'])->name('timesheets.generate');
     Route::get('/show', [TimesheetController::class, 'show'])->name('timesheets.show');
     Route::post('/download-zip', [TimesheetController::class, 'downloadZip'])->name('timesheets.download-zip');
-
-    // Exportação de cartão de ponto em XLS
-    Route::get('/timesheets/registration/{registration}/export-xls', [TimesheetController::class, 'exportRegistrationXls'])->name('timesheets.export-registration-xls');
-    Route::post('/timesheets/by-department/export-xls', [TimesheetController::class, 'exportByDepartmentXls'])->name('timesheets.export-by-department-xls');
 });
 
 // Relatórios

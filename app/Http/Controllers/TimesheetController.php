@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Person;
 use App\Models\EmployeeRegistration;
 use App\Models\Department;
-use App\Models\Establishment;
 use App\Services\TimesheetGeneratorService;
 use App\Services\ZipService;
 use Illuminate\Http\Request;
@@ -227,19 +226,14 @@ class TimesheetController extends Controller
      */
     public function byDepartment()
     {
-        $establishments = Establishment::orderBy('corporate_name')->get();
-
-        $departments = Department::with('establishment')
-            ->withCount(['employeeRegistrations' => function ($query) {
-                $query->where('status', 'active');
-            }])
-            ->orderBy('name')
-            ->get()
-            ->groupBy('establishment_id');
+        $departments = Department::withCount(['employeeRegistrations' => function ($query) {
+            $query->where('status', 'active');
+        }])
+        ->orderBy('name')
+        ->get();
 
         return view('timesheets.by-department', [
-            'establishments' => $establishments,
-            'departments'    => $departments,
+            'departments' => $departments,
         ]);
     }
 
@@ -329,74 +323,5 @@ class TimesheetController extends Controller
 
         // Download
         return response()->download($zipPath, basename($zipPath))->deleteFileAfterSend(true);
-    }
-
-    /**
-     * Exporta cartão de ponto individual em XLS (corrigido para não depender de 'period')
-     */
-    public function exportRegistrationXls(Request $request, EmployeeRegistration $registration)
-    {
-        $registration->load(['person', 'establishment', 'department', 'currentWorkShiftAssignment.template']);
-        $data = $this->timesheetService->generate(
-            $registration,
-            $request->start_date,
-            $request->end_date
-        );
-
-        $start = \Carbon\Carbon::parse($data['startDate']);
-        $end = \Carbon\Carbon::parse($data['endDate']);
-        $period = new \DatePeriod($start, new \DateInterval('P1D'), $end->copy()->addDay());
-
-        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
-        $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('Cartão de Ponto');
-
-        // Cabeçalho
-        $sheet->setCellValue('A1', 'Colaborador:');
-        $sheet->setCellValue('B1', $registration->person->full_name);
-        $sheet->setCellValue('A2', 'Matrícula:');
-        $sheet->setCellValue('B2', $registration->matricula);
-        $sheet->setCellValue('A3', 'Período:');
-        $sheet->setCellValue('B3', $data['startDate'] . ' a ' . $data['endDate']);
-        $sheet->setCellValue('A4', 'Departamento:');
-        $sheet->setCellValue('B4', $registration->department->name ?? '-');
-        $sheet->setCellValue('A5', 'Estabelecimento:');
-        $sheet->setCellValue('B5', $registration->establishment->corporate_name ?? '-');
-        $sheet->setCellValue('A6', 'Jornada:');
-        $sheet->setCellValue('B6', $registration->currentWorkShiftAssignment && $registration->currentWorkShiftAssignment->template ? $registration->currentWorkShiftAssignment->template->name : '-');
-
-        // Tabela de dias
-        $sheet->setCellValue('A8', 'Data');
-        $sheet->setCellValue('B8', 'Dia Semana');
-        $sheet->setCellValue('C8', 'Batidas');
-        $sheet->setCellValue('D8', 'Trabalhado (min)');
-        $sheet->setCellValue('E8', 'Esperado (min)');
-        $sheet->setCellValue('F8', 'Extra (min)');
-        $sheet->setCellValue('G8', 'Falta (min)');
-
-        $row = 9;
-        foreach ($period as $date) {
-            $dateStr = $date->format('Y-m-d');
-            $sheet->setCellValue('A'.$row, $date->format('d/m/Y'));
-            $sheet->setCellValue('B'.$row, __(ucfirst($date->format('l'))));
-            $batidas = $data['dailyRecords'][$dateStr] ?? collect();
-            $batidasStr = method_exists($batidas, 'map') ? $batidas->map(function($rec) { return $rec->record_time; })->implode(' | ') : '';
-            $sheet->setCellValue('C'.$row, $batidasStr);
-            $sheet->setCellValue('D'.$row, $data['calculations'][$dateStr]['worked'] ?? 0);
-            $sheet->setCellValue('E'.$row, $data['calculations'][$dateStr]['expected'] ?? 0);
-            $sheet->setCellValue('F'.$row, $data['calculations'][$dateStr]['overtime'] ?? 0);
-            $sheet->setCellValue('G'.$row, $data['calculations'][$dateStr]['absence'] ?? 0);
-            $row++;
-        }
-
-        $fileName = $this->sanitizeFileName($registration->person->full_name . '_' . $registration->matricula . '_cartao_ponto') . '.xls';
-        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xls($spreadsheet);
-        ob_start();
-        $writer->save('php://output');
-        $xlsData = ob_get_clean();
-        return response($xlsData, 200, [
-            'Content-Type' => 'application/vnd.ms-excel',
-            'Content-Disposition' => 'attachment; filename="'.$fileName.'"',
-        ]);
     }
 }
