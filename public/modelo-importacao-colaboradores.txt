@@ -1,0 +1,7 @@
+1+1+I[12345678901[NOME EXEMPLO[1[1[1001
+1+1+I[98765432100[OUTRO COLABORADOR[1[1[1002
+1+1+I[11122233344[MAIS UM NOME[1[1[1003
+
+# Formato: 1+1+I[CPF[NOME[1[1[MATRICULA
+# Substitua pelos dados reais dos colaboradores.
+# Não inclua cabeçalho, apenas linhas de colaboradores.

@@ -41,6 +41,7 @@ Route::middleware('auth')->group(function () {
 Route::resource('departments', DepartmentController::class);
 
 // Colaboradores (Pessoas)
+Route::get('/employees/export-txt', [EmployeeController::class, 'exportTxt'])->name('employees.exportTxt');
 Route::resource('employees', EmployeeController::class);
 
 // Vínculos de Colaboradores (EmployeeRegistrations)

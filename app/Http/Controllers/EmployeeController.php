@@ -12,6 +12,30 @@ use Illuminate\Support\Facades\DB;
 class EmployeeController extends Controller
 {
     /**
+     * Exporta lista de pessoas e vínculos no formato solicitado: 1+1+I[CPF[NOME[1[1[MATRICULA
+     */
+    public function exportTxt(Request $request)
+    {
+        $people = Person::with(['activeRegistrations'])->orderBy('full_name')->get();
+
+        $lines = [];
+        foreach ($people as $person) {
+            foreach ($person->activeRegistrations as $reg) {
+                $cpf = str_pad($person->cpf, 11, '0', STR_PAD_LEFT);
+                $nome = $person->full_name;
+                $matricula = $reg->matricula;
+                $linha = "1+1+I[{$cpf}[{$nome}[1[1[{$matricula}";
+                $lines[] = $linha;
+            }
+        }
+
+        $txtContent = implode("\n", $lines);
+
+        return response($txtContent)
+            ->header('Content-Type', 'text/plain')
+            ->header('Content-Disposition', 'attachment; filename="colaboradores_dixi.txt"');
+    }
+    /**
      * Lista todas as pessoas com seus vínculos
      */
     public function index(Request $request)

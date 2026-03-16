@@ -10,8 +10,8 @@
             <p class="text-gray-600 mt-2">Histórico de importações de colaboradores via CSV</p>
         </div>
         <div class="flex gap-3">
-            <a href="/modelo-importacao-colaboradores.csv" download class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition">
-                <i class="fas fa-download mr-2"></i>Baixar Modelo CSV
+            <a href="/modelo-importacao-colaboradores.txt" download class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition">
+                <i class="fas fa-file-alt mr-2"></i>Baixar Modelo TXT (AFD)
             </a>
             <a href="{{ route('employee-imports.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg hover:shadow-xl transition">
                 <i class="fas fa-plus mr-2"></i>Nova Importação

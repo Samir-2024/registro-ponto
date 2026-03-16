@@ -9,9 +9,14 @@
             </h1>
             <p class="text-gray-600 mt-2">Gerencie pessoas e seus vínculos empregatícios</p>
         </div>
-        <a href="{{ route('employees.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition">
-            <i class="fas fa-plus mr-2"></i>Nova Pessoa
-        </a>
+        <div class="flex gap-3">
+            <a href="{{ route('employees.create') }}" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition">
+                <i class="fas fa-plus mr-2"></i>Nova Pessoa
+            </a>
+            <a href="{{ route('employees.exportTxt') }}" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-lg shadow-lg transition">
+                <i class="fas fa-file-alt mr-2"></i>Exportar TXT
+            </a>
+        </div>
     </div>
 
     <!-- Filtros -->

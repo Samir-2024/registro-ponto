@@ -10,7 +10,7 @@
             <h1 class="text-3xl font-bold text-gray-900">
                 <i class="fas fa-file-import text-blue-600 mr-3"></i>Nova Importação de Colaboradores
             </h1>
-            <p class="text-gray-600 mt-2">Faça upload de um arquivo CSV para importar colaboradores em massa</p>
+            <p class="text-gray-600 mt-2">Faça upload de um arquivo TXT para importar colaboradores em massa</p>
         </div>
     </div>
 
@@ -21,13 +21,13 @@
             <div class="flex-1">
                 <h3 class="font-bold text-blue-900 mb-2">Importante</h3>
                 <ul class="text-sm text-blue-800 space-y-1 mb-4">
-                    <li><i class="fas fa-check mr-2"></i>O arquivo deve estar no formato CSV</li>
+                    <li><i class="fas fa-check mr-2"></i>O arquivo deve estar no formato TXT</li>
                     <li><i class="fas fa-check mr-2"></i>Use o modelo disponível para garantir a formatação correta</li>
                     <li><i class="fas fa-check mr-2"></i>O processamento será realizado em segundo plano</li>
                     <li><i class="fas fa-check mr-2"></i>Você será notificado quando concluir</li>
                 </ul>
                 <a href="{{ route('employee-imports.template') }}" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-semibold rounded-lg transition shadow">
-                    <i class="fas fa-download mr-2"></i>Baixar Modelo CSV
+                    <i class="fas fa-download mr-2"></i>Baixar Modelo TXT
                 </a>
             </div>
         </div>
@@ -40,7 +40,7 @@
             <!-- File Upload Area -->
             <div class="mb-8">
                 <label class="block text-sm font-semibold text-gray-700 mb-4">
-                    <i class="fas fa-file-csv text-gray-400 mr-2"></i>Arquivo CSV *
+                    <i class="fas fa-file-alt text-gray-400 mr-2"></i>Arquivo TXT *
                 </label>
                 
                 <div class="border-2 border-dashed border-gray-300 rounded-lg p-12 text-center hover:border-blue-500 transition cursor-pointer" id="dropZone">
@@ -49,16 +49,16 @@
                             <i class="fas fa-cloud-upload-alt text-6xl text-gray-300"></i>
                         </div>
                         <div>
-                            <p class="text-lg font-semibold text-gray-700 mb-2">Arraste e solte o arquivo CSV aqui</p>
+                            <p class="text-lg font-semibold text-gray-700 mb-2">Arraste e solte o arquivo TXT aqui</p>
                             <p class="text-sm text-gray-500 mb-4">ou</p>
                             <label for="file" class="inline-block bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg cursor-pointer transition shadow-lg hover:shadow-xl">
                                 <i class="fas fa-folder-open mr-2"></i>Selecionar do Computador
                             </label>
-                            <input id="file" name="csv_file" type="file" accept=".csv" class="sr-only" required>
+                            <input id="file" name="txt_file" type="file" accept=".txt" class="sr-only" required>
                             <p class="text-xs text-gray-400 mt-4">Tamanho máximo: 10MB</p>
                         </div>
                         <div id="fileInfo" class="hidden">
-                            <i class="fas fa-file-csv text-5xl text-green-500 mb-3"></i>
+                            <i class="fas fa-file-alt text-5xl text-green-500 mb-3"></i>
                             <p id="fileName" class="text-lg font-semibold text-gray-700"></p>
                             <p class="text-sm text-green-600 mt-2">
                                 <i class="fas fa-check-circle mr-1"></i>Arquivo selecionado
@@ -70,7 +70,7 @@
                     </div>
                 </div>
 
-                @error('csv_file')
+                @error('txt_file')
                     <p class="mt-2 text-sm text-red-600">{{ $message }}</p>
                 @enderror
             </div>
@@ -114,13 +114,17 @@
 
     // File input change handler
     fileInput.addEventListener('change', function() {
-        if (this.files.length > 0) {
+        if (this.files.length > 0 && this.files[0].name.endsWith('.txt')) {
             fileName.textContent = this.files[0].name;
             fileInfo.classList.remove('hidden');
             dropZone.querySelector('.space-y-4 > div:first-child').classList.add('hidden');
             dropZone.querySelector('.space-y-4 > div:nth-child(2)').classList.add('hidden');
             submitBtn.disabled = false;
             readAndPreviewFile(this.files[0]);
+        } else {
+            submitBtn.disabled = true;
+            fileInfo.classList.add('hidden');
+            fileName.textContent = '';
         }
     });
 
@@ -139,7 +143,7 @@
         dropZone.classList.remove('border-blue-500', 'bg-blue-50');
         
         const files = e.dataTransfer.files;
-        if (files.length > 0 && files[0].name.endsWith('.csv')) {
+        if (files.length > 0 && files[0].name.endsWith('.txt')) {
             fileInput.files = files;
             fileName.textContent = files[0].name;
             fileInfo.classList.remove('hidden');
@@ -147,6 +151,10 @@
             dropZone.querySelector('.space-y-4 > div:nth-child(2)').classList.add('hidden');
             submitBtn.disabled = false;
             readAndPreviewFile(files[0]);
+        } else {
+            submitBtn.disabled = true;
+            fileInfo.classList.add('hidden');
+            fileName.textContent = '';
         }
     });
 

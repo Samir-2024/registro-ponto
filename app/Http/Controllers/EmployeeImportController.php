@@ -7,20 +7,21 @@ use App\Models\EmployeeImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Facades\Log;
 
 class EmployeeImportController extends Controller
 {
     public function index()
     {
         $imports = EmployeeImport::orderBy('created_at', 'desc')->paginate(20);
-        
+
         $stats = [
             'total' => EmployeeImport::count(),
             'completed' => EmployeeImport::where('status', 'completed')->count(),
             'processing' => EmployeeImport::where('status', 'processing')->count(),
             'failed' => EmployeeImport::where('status', 'failed')->count(),
         ];
-        
+
         return view('employee-imports.index', compact('imports', 'stats'));
     }
 
@@ -35,7 +36,7 @@ class EmployeeImportController extends Controller
     public function downloadTemplate()
     {
         $filePath = public_path('modelo-importacao-colaboradores.csv');
-        
+
         if (file_exists($filePath)) {
             return Response::download($filePath, 'modelo-importacao-colaboradores.csv');
         }
@@ -95,15 +96,15 @@ class EmployeeImportController extends Controller
             $file = $request->file('csv_file');
             $fileName = time() . '_' . $file->getClientOriginalName();
             $fileSize = $file->getSize();
-            
+
             $directory = storage_path('app/employee-imports');
             if (!file_exists($directory)) {
                 mkdir($directory, 0777, true);
             }
-            
+
             $fullPath = $directory . '/' . $fileName;
             $file->move($directory, $fileName);
-            
+
             if (!file_exists($fullPath)) {
                 return redirect()->route('employee-imports.create')
                     ->with('error', 'Erro ao salvar o arquivo.');
@@ -125,11 +126,10 @@ class EmployeeImportController extends Controller
                 'import' => $import,
                 'preview' => $preview
             ]);
-
         } catch (\Exception $e) {
-            \Log::error('Erro no upload de CSV: ' . $e->getMessage());
-            \Log::error('Stack trace: ' . $e->getTraceAsString());
-            
+            Log::error('Erro no upload de CSV: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+
             return redirect()->route('employee-imports.create')
                 ->with('error', 'Erro durante o upload: ' . $e->getMessage());
         }
@@ -157,11 +157,11 @@ class EmployeeImportController extends Controller
         // Carregar detalhes dos erros se existirem
         $errorDetails = [];
         $errorFile = storage_path('app/employee-imports/errors-' . $import->id . '.json');
-        
+
         if (file_exists($errorFile)) {
             $errorDetails = json_decode(file_get_contents($errorFile), true) ?? [];
         }
-        
+
         return view('employee-imports.show', compact('import', 'errorDetails'));
     }
 
@@ -172,35 +172,35 @@ class EmployeeImportController extends Controller
     {
         // Carregar arquivo de erros
         $errorFile = storage_path('app/employee-imports/errors-' . $import->id . '.json');
-        
+
         if (!file_exists($errorFile)) {
             return redirect()->route('employee-imports.show', $import)
                 ->with('info', 'Nenhum erro encontrado para esta importação.');
         }
-        
+
         $errorDetails = json_decode(file_get_contents($errorFile), true) ?? [];
-        
+
         // Carregar o CSV original para pegar os dados das linhas com erro
         $csvFile = storage_path('app/' . $import->file_path);
         $errorRows = [];
-        
+
         if (file_exists($csvFile)) {
             $handle = fopen($csvFile, 'r');
             $header = fgetcsv($handle, 1000, ',');
             $header = array_map('trim', $header);
-            
+
             $lineNumber = 1;
             $errorLines = array_column($errorDetails, 'line');
-            
+
             while (($row = fgetcsv($handle, 1000, ',')) !== false) {
                 $lineNumber++;
-                
+
                 // Se esta linha tem erro, adicionar aos dados
                 $errorIndex = array_search($lineNumber, $errorLines);
                 if ($errorIndex !== false) {
                     $row = array_map('trim', $row);
                     $rowData = array_combine($header, $row);
-                    
+
                     $errorRows[] = [
                         'line' => $lineNumber,
                         'data' => $rowData,
@@ -208,10 +208,10 @@ class EmployeeImportController extends Controller
                     ];
                 }
             }
-            
+
             fclose($handle);
         }
-        
+
         return view('employee-imports.errors', compact('import', 'errorRows'));
     }
 
@@ -230,32 +230,53 @@ class EmployeeImportController extends Controller
             'sample_data' => []
         ];
 
-        $handle = fopen($filePath, 'r');
-        $header = fgetcsv($handle, 1000, ',');
-        
-        // Limpar espaços em branco do cabeçalho
-        $header = array_map('trim', $header);
-        
-        $lineNumber = 1;
-        $sampleCount = 0;
+        if (!file_exists($filePath)) {
+            return $preview;
+        }
 
-        while (($row = fgetcsv($handle, 1000, ',')) !== false && $sampleCount < 5) {
+        $handle = fopen($filePath, 'r');
+
+        if (!$handle) {
+            return $preview;
+        }
+
+        $header = fgetcsv($handle, 1000, ',');
+        $header = array_map('trim', $header);
+
+        $lineNumber = 1;
+
+        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
+
             $lineNumber++;
             $preview['total_rows']++;
 
+            $row = array_map('trim', $row);
+
+            if (count($header) !== count($row)) {
+                $preview['invalid_rows']++;
+
+                if (count($preview['errors']) < 10) {
+                    $preview['errors'][] = [
+                        'line' => $lineNumber,
+                        'errors' => ['Número de colunas inválido']
+                    ];
+                }
+
+                continue;
+            }
+
             try {
-                // Limpar espaços em branco dos valores
-                $row = array_map('trim', $row);
+
                 $data = array_combine($header, $row);
-                
-                // Limpar CPF e PIS antes de validar
+
                 if (isset($data['cpf'])) {
                     $data['cpf_cleaned'] = preg_replace('/[^0-9]/', '', $data['cpf']);
                 }
+
                 if (isset($data['pis_pasep'])) {
                     $data['pis_cleaned'] = preg_replace('/[^0-9]/', '', $data['pis_pasep']);
                 }
-                
+
                 $validator = Validator::make($data, [
                     'cpf' => 'required|string',
                     'cpf_cleaned' => 'required|string|size:11',
@@ -270,43 +291,46 @@ class EmployeeImportController extends Controller
                 ]);
 
                 if ($validator->fails()) {
+
                     $preview['invalid_rows']++;
+
                     if (count($preview['errors']) < 10) {
                         $preview['errors'][] = [
                             'line' => $lineNumber,
                             'errors' => $validator->errors()->all()
                         ];
                     }
-                } else {
-                    $preview['valid_rows']++;
-                    
-                    // Verificar se pessoa já existe (buscar pelo CPF limpo)
-                    $personExists = \App\Models\Person::where('cpf', $data['cpf_cleaned'])->exists();
-                    
-                    // Verificar se matrícula já existe
-                    $registrationExists = isset($data['matricula']) && 
-                        \App\Models\EmployeeRegistration::where('matricula', $data['matricula'])->exists();
-                    
-                    if ($personExists || $registrationExists) {
-                        $preview['existing_employees']++; // Será atualizado
-                    } else {
-                        $preview['new_employees']++; // Será criado
-                    }
 
-                    if ($sampleCount < 5) {
-                        $preview['sample_data'][] = $data;
-                        $sampleCount++;
-                    }
+                    continue;
                 }
 
-            } catch (\Exception $e) {
-                $preview['invalid_rows']++;
-            }
-        }
+                $preview['valid_rows']++;
 
-        // Contar o resto das linhas
-        while (($row = fgetcsv($handle, 1000, ',')) !== false) {
-            $preview['total_rows']++;
+                $personExists = \App\Models\Person::where('cpf', $data['cpf_cleaned'])->exists();
+
+                $registrationExists = !empty($data['matricula']) &&
+                    \App\Models\EmployeeRegistration::where('matricula', $data['matricula'])->exists();
+
+                if ($personExists || $registrationExists) {
+                    $preview['existing_employees']++;
+                } else {
+                    $preview['new_employees']++;
+                }
+
+                if (count($preview['sample_data']) < 5) {
+                    $preview['sample_data'][] = $data;
+                }
+            } catch (\Exception $e) {
+
+                $preview['invalid_rows']++;
+
+                if (count($preview['errors']) < 10) {
+                    $preview['errors'][] = [
+                        'line' => $lineNumber,
+                        'errors' => ['Erro ao processar linha']
+                    ];
+                }
+            }
         }
 
         fclose($handle);
