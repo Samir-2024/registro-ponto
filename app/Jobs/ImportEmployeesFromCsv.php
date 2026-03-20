@@ -7,12 +7,12 @@ use App\Models\EmployeeRegistration;
 use App\Models\EmployeeImport;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Bus\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Foundation\Bus\Dispatchable;
 
 class ImportEmployeesFromCsv implements ShouldQueue
 {

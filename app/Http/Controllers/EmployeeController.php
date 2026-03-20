@@ -12,6 +12,46 @@ use Illuminate\Support\Facades\Response;
 
 class EmployeeController extends Controller
 {
+
+    /**
+     * Exporta os cadastros (com filtros ativos) em formato DIXI
+     */
+    public function exportDixi(Request $request)
+    {
+        $people = Person::with(['activeRegistrations' => function ($q) {
+            $q->orderBy('created_at', 'desc');
+        }])->orderBy('full_name')->get();
+
+        $filename = 'cadastros_dixi_' . date('Y-m-d_His') . '.txt';
+        $headers = [
+            'Content-Type' => 'text/plain; charset=UTF-8',
+            'Content-Disposition' => "attachment; filename=\"{$filename}\"",
+            'Pragma' => 'no-cache',
+            'Cache-Control' => 'must-revalidate, post-check=0, pre-check=0',
+            'Expires' => '0',
+        ];
+
+        $callback = function () use ($people) {
+            $file = fopen('php://output', 'w');
+            // BOM UTF-8 para compatibilidade
+            fprintf($file, chr(0xEF) . chr(0xBB) . chr(0xBF));
+            foreach ($people as $person) {
+                if ($person->activeRegistrations->isEmpty()) {
+                    // Sem vínculo
+                    $linha = '1+1+I[' . ($person->cpf ?? '-') . '[' . ($person->full_name ?? '-') . '[1[1[-';
+                    fwrite($file, $linha . "\r\n");
+                } else {
+                    foreach ($person->activeRegistrations as $reg) {
+                        $linha = '1+1+I[' . ($person->cpf ?? '-') . '[' . ($person->full_name ?? '-') . '[1[1[' . ($reg->matricula ?? '-');
+                        fwrite($file, $linha . "\r\n");
+                    }
+                }
+            }
+            fclose($file);
+        };
+
+        return Response::stream($callback, 200, $headers);
+    }
     /**
      * Lista todas as pessoas com seus vínculos
      */

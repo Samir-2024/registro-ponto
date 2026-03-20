@@ -92,6 +92,9 @@
                 <a href="{{ $exportUrl }}" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition">
                     <i class="fas fa-file-csv mr-2"></i>Exportar CSV
                 </a>
+                    <a href="{{ route('employees.exportDixi', request()->query()) }}" class="bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-2 rounded-lg transition">
+                        <i class="fas fa-file-alt mr-2"></i>Exportar DIXI
+                    </a>
             </div>
         </form>
     </div>

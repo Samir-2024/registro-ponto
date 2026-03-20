@@ -42,6 +42,7 @@ Route::resource('departments', DepartmentController::class);
 
 // Colaboradores (Pessoas)
 Route::get('/employees/export', [EmployeeController::class, 'export'])->name('employees.export');
+Route::get('/employees/export-dixi', [EmployeeController::class, 'exportDixi'])->name('employees.exportDixi');
 Route::resource('employees', EmployeeController::class);
 
 // Vínculos de Colaboradores (EmployeeRegistrations)
