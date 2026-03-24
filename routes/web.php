@@ -1,20 +1,23 @@
 <?php
 
+
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\{
     EstablishmentController,
     DepartmentController,
-    EmployeeController,
     EmployeeImportController,
     WorkScheduleController,
     AfdImportController,
     TimesheetController,
     AdminController,
     DashboardController,
-    EmployeeReportController
+    EmployeeReportController,
+    ColaboratorsExportController,
+    ExportController
 };
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\Api\FilterController;
+use App\Http\Controllers\EmployeeController;
 
 // Rotas de autenticação
 Route::middleware('guest')->group(function () {
@@ -26,6 +29,10 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->n
 
 // Rotas protegidas por autenticação
 Route::middleware('auth')->group(function () {
+    // Importação de colaboradores/empregadores
+    Route::get('/import', [\App\Http\Controllers\ImportController::class, 'showForm'])->name('import.form');
+    Route::post('/import', [\App\Http\Controllers\ImportController::class, 'import'])->name('import.process');
+
     // Dashboard
     Route::get('/', [DashboardController::class, 'index'])->name('dashboard');
 
@@ -111,6 +118,13 @@ Route::prefix('employee-imports')->group(function () {
     Route::get('/{import}/errors', [EmployeeImportController::class, 'showErrors'])->name('employee-imports.errors');
 });
 
+// Importação de Empregador (CSV)
+Route::prefix('employer-imports')->name('employer-imports.')->group(function () {
+    Route::get('/', [\App\Http\Controllers\EmployerImportController::class, 'index'])->name('index');
+    Route::get('/create', [\App\Http\Controllers\EmployerImportController::class, 'create'])->name('create');
+    Route::post('/', [\App\Http\Controllers\EmployerImportController::class, 'store'])->name('store');
+});
+
 // Importação de Vínculos e Jornadas (CSV Legado)
 Route::prefix('vinculo-imports')->name('vinculo-imports.')->group(function () {
     Route::get('/', [\App\Http\Controllers\VinculoImportController::class, 'index'])->name('index');
@@ -158,4 +172,21 @@ Route::prefix('reports')->name('reports.')->group(function () {
         Route::get('/employees/search', [FilterController::class, 'searchEmployees']);
         Route::get('/employees/by-department', [FilterController::class, 'getEmployeesByDepartment']);
     });
+
+
+Route::middleware('auth')->group(function () {
+    // ...existing code...
+
+    // Tela Central de Exportações
+    Route::get('/exports', [ExportController::class, 'index'])->name('exports.index');
+    Route::get('/exports/employer/download', [ExportController::class, 'downloadEmployer'])->name('employer-export.download-direct');
+    Route::get('/exports/department/download', [ExportController::class, 'downloadByDepartment'])->name('exports.download-by-department');
+
+    // Exportação de Colaboradores
+    Route::prefix('employee-export')->name('employee-export.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\EmployeeExportController::class, 'index'])->name('index');
+        Route::get('/download', [\App\Http\Controllers\EmployeeExportController::class, 'download'])->name('download');
+        Route::post('/process', [\App\Http\Controllers\EmployeeExportController::class, 'process'])->name('process');
+    });
+});
 });

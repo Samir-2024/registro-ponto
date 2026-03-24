@@ -73,18 +73,19 @@
 
                 <!-- Importações -->
                 <div class="mt-6">
-                    <h3 class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Importações</h3>
-                    
+                    <h3 class="px-4 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">EQUIPAMENTOS</h3>
                     <a href="{{ route('afd-imports.index') }}" class="sidebar-link flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg mb-1 {{ request()->routeIs('afd-imports.*') ? 'active' : '' }}">
                         <i class="fas fa-file-import w-5"></i>
                         <span>Importar AFD</span>
                     </a>
-                    
                     <a href="{{ route('employee-imports.index') }}" class="sidebar-link flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg mb-1 {{ request()->routeIs('employee-imports.*') ? 'active' : '' }}">
-                        <i class="fas fa-users-cog w-5"></i>
+                        <i class="fas fa-user-plus w-5"></i>
                         <span>Importar Colaboradores</span>
                     </a>
-                    
+                    <a href="{{ route('exports.index') }}" class="sidebar-link flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg mb-1 {{ request()->routeIs('exports.*') || request()->routeIs('employee-export.*') ? 'active' : '' }}">
+                        <i class="fas fa-file-export w-5 text-blue-600"></i>
+                        <span>Exportações</span>
+                    </a>
                     <a href="{{ route('vinculo-imports.index') }}" class="sidebar-link flex items-center space-x-3 px-4 py-3 text-gray-700 rounded-lg mb-1 {{ request()->routeIs('vinculo-imports.*') ? 'active' : '' }}">
                         <i class="fas fa-link w-5"></i>
                         <span>Importar Vínculos</span>

@@ -24,18 +24,17 @@ class AfdParserService
     public function parse(string $filePath, AfdImport $afdImport, ?string $formatHint = null): array
     {
         try {
-            // Converte para caminho absoluto se necessário
-            // Se já tiver storage_path() no início, usa direto. Senão, adiciona.
-            if (str_starts_with($filePath, '/')) {
-                $fullPath = $filePath;
-            } elseif (str_starts_with($filePath, 'storage/app/')) {
-                // Caminho já contém storage/app/, só adiciona o base_path
-                $fullPath = base_path($filePath);
+            $filePath = ltrim($filePath, '/\\');
+            $storageBase = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, storage_path('app/'));
+            $normalized = str_replace(['/', '\\'], DIRECTORY_SEPARATOR, $filePath);
+            // Se já começa com storage_path('app/'), não concatena de novo
+            if (strpos($normalized, $storageBase) === 0) {
+                $fullPath = $normalized;
+            } elseif (preg_match('/^[A-Za-z]:\\\\|^\//', $normalized)) {
+                $fullPath = $normalized;
             } else {
-                // Caminho relativo normal
-                $fullPath = storage_path('app/' . $filePath);
+                $fullPath = $storageBase . $normalized;
             }
-            
             if (!file_exists($fullPath)) {
                 throw new \Exception("Arquivo não encontrado: {$fullPath}");
             }

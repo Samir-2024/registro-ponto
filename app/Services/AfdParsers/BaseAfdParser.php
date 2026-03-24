@@ -39,9 +39,8 @@ abstract class BaseAfdParser implements AfdParserInterface
         $this->pendingRecords = [];
 
         try {
-            // Converter para caminho absoluto se necessário
-            $fullPath = str_starts_with($filePath, '/') ? $filePath : storage_path('app/' . $filePath);
-            
+            // Sempre trata file_path como relativo a storage/app
+            $fullPath = storage_path('app/' . ltrim($filePath, '/'));
             if (!file_exists($fullPath)) {
                 throw new \Exception("Arquivo não encontrado: {$fullPath}");
             }

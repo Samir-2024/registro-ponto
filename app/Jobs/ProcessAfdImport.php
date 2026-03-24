@@ -49,16 +49,11 @@ class ProcessAfdImport implements ShouldQueue
             // Atualizar status para processando
             $this->afdImport->update(['status' => 'processing']);
 
-            // Obter caminho completo do arquivo
-            $fullPath = storage_path('app/' . $this->afdImport->file_path);
 
-            // Verificar se arquivo existe
-            if (!file_exists($fullPath)) {
-                throw new \Exception("Arquivo não encontrado: {$fullPath}");
-            }
 
-            // Processar o arquivo AFD - assinatura correta: parse($filePath, $afdImport, $formatHint)
-            $result = $parser->parse($fullPath, $this->afdImport);
+            // Sempre passar o caminho RELATIVO para o parser
+            $filePath = ltrim($this->afdImport->file_path, '/\\');
+            $result = $parser->parse($filePath, $this->afdImport);
 
             // Recarregar o modelo para pegar dados atualizados
             $this->afdImport->refresh();

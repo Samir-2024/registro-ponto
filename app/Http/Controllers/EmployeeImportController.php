@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Jobs\ImportEmployeesFromCsv;
+use App\Jobs\ImportCollaboratorsJob;
 use App\Models\EmployeeImport;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
@@ -146,7 +146,7 @@ class EmployeeImportController extends Controller
         }
 
         // Despachar job para processamento
-        ImportEmployeesFromCsv::dispatch($import);
+        ImportCollaboratorsJob::dispatch(storage_path('app/' . $import->file_path), auth()->id() ?? 1);
 
         return redirect()->route('employee-imports.show', $import)
             ->with('success', 'Importação iniciada! O processamento está sendo realizado em segundo plano.');
@@ -244,30 +244,46 @@ class EmployeeImportController extends Controller
             $preview['total_rows']++;
 
             try {
-                // Limpar espaços em branco dos valores
-                $row = array_map('trim', $row);
-                $data = array_combine($header, $row);
+                $isTxtLine = false;
+                if (count($row) === 1 && str_starts_with($row[0], '1+1+I[')) {
+                    $isTxtLine = true;
+                    $parts = explode('[', $row[0]);
+                    $data = [
+                        'cpf' => $parts[1] ?? '',
+                        'full_name' => $parts[2] ?? '',
+                        'matricula' => $parts[5] ?? '',
+                    ];
+                } else {
+                    // Limpar espaços em branco dos valores
+                    $row = array_map('trim', $row);
+                    $data = array_combine($header, $row);
+                }
                 
                 // Limpar CPF e PIS antes de validar
-                if (isset($data['cpf'])) {
+                if (!empty($data['cpf'])) {
                     $data['cpf_cleaned'] = preg_replace('/[^0-9]/', '', $data['cpf']);
                 }
-                if (isset($data['pis_pasep'])) {
+                if (!empty($data['pis_pasep'])) {
                     $data['pis_cleaned'] = preg_replace('/[^0-9]/', '', $data['pis_pasep']);
                 }
                 
-                $validator = Validator::make($data, [
-                    'cpf' => 'required|string',
-                    'cpf_cleaned' => 'required|string|size:11',
-                    'full_name' => 'required|string|max:255',
-                    'pis_pasep' => 'required|string',
-                    'pis_cleaned' => 'required|string|size:11',
-                    'matricula' => 'nullable|string|max:20',
-                    'establishment_id' => 'required|exists:establishments,id',
-                    'department_id' => 'nullable|exists:departments,id',
-                    'admission_date' => 'required|date',
-                    'role' => 'nullable|string|max:255',
-                ]);
+                if ($isTxtLine) {
+                    $validator = Validator::make($data, [
+                        'cpf_cleaned' => 'required|string|size:11',
+                        'full_name' => 'required|string|max:255',
+                    ]);
+                } else {
+                    $validator = Validator::make($data, [
+                        'cpf' => 'nullable|string',
+                        'full_name' => 'required|string|max:255',
+                        'pis_pasep' => 'nullable|string',
+                        'matricula' => 'nullable|string|max:20',
+                        'establishment_id' => 'required|exists:establishments,id',
+                        'department_id' => 'nullable|exists:departments,id',
+                        'admission_date' => 'required|date',
+                        'role' => 'nullable|string|max:255',
+                    ]);
+                }
 
                 if ($validator->fails()) {
                     $preview['invalid_rows']++;

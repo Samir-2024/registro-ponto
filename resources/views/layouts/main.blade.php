@@ -123,9 +123,9 @@
                             <i class="fas fa-file-import"></i>
                             <span>Importar AFD</span>
                         </a>
-                        <a href="{{ route('employee-imports.index') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('employee-imports.*') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100' }}">
-                            <i class="fas fa-user-plus"></i>
-                            <span>Importar Colaboradores</span>
+                        <a href="{{ route('exports.index') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('exports.*') || request()->routeIs('employee-export.*') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100' }}">
+                            <i class="fas fa-file-export"></i>
+                            <span>Exportações</span>
                         </a>
                         <a href="{{ route('vinculo-imports.index') }}" class="flex items-center space-x-3 px-3 py-2 rounded-lg {{ request()->routeIs('vinculo-imports.*') ? 'bg-blue-50 text-blue-700' : 'text-gray-700 hover:bg-gray-100' }}">
                             <i class="fas fa-link"></i>

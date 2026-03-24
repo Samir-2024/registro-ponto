@@ -21,6 +21,7 @@ class AfdParserFactory
         HenryOrion5Parser::class,       // Formato com matrícula - linhas curtas
         HenrySuperFacilParser::class,   // Formato com PIS e data compacta
         DixiParser::class,              // Formato padrão Portaria 1510 com CPF
+        DixiCollaboratorParser::class,  // Suporte a importação da listagem de colaboradores do REP
     ];
 
     /**
